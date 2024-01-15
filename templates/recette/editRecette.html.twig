@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modification de la recette{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="text-center">Modification de la recette</h1>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                {{ form_start(form) }}
+                
+                <div class="my-custom-class-for-errors">
+                    {{ form_errors(form) }}
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col">
+                        {{ form_row(form.nom) }}
+                    </div>
+                    <div class="col">
+                        {{ form_row(form.temps) }}
+                    </div>
+                    <div class="col">
+                        {{ form_row(form.nombrePersonnes) }}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col">
+                        {{ form_row(form.difficulte) }}
+                    </div>
+                    <div class="col">
+                        {{ form_row(form.prix) }}
+                    </div>
+                    <div class="col">
+                        {{ form_row(form.favori) }}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col">
+                        {{ form_row(form.etapes) }}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col">
+                        {{ form_row(form.listIngredients) }}
+                    </div>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

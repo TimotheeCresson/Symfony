@@ -1,0 +1,414 @@
+pour symphony 
+les prérequis sont qu'il faut download git  (dans invite de commande faire git -v pour voir la version (avoir une version récente))
+
+et il faut également download php (et faire php -v, il faut une version minimum de 8.0)
+
+
+download wamp ou xamp 
+
+si wamp (dans bin prendre version php 8.2) et faire propriété puis coller dans modifier varaible variables environnement cliquer sur path puis coller dedans le chemin vers php 8.2
+pour php my admin (nom utilisateur root et mot de passe vide)
+
+il faut download composer
+
+ensuite il faut aller sur scoop.sh et mettre cela Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser    dans windows powershell (menu windows)   mettre oui pour tout 
+puis faire cette commande Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+
+puis une fois installer faire  scoop install symfony-cli
+
+https://symfony.com/doc/6.0/setup.html ensuite on peut aller sur cela pour avoir tous les trucs de symfony
+
+
+ne pas oublier d'ouvrir les services de wamp
+
+puis symfony check:requirements
+
+
+puis symfony new my_project_directory --version="6.0.*" --webapp   avec à la place de my_project_directory  le nom de mon projet (exemple: test-symfony) dans invite de commande
+puis cd test-symfony 
+puis code . pour lancer avec vs code 
+
+
+puis sur vs code   faire dans terminal symfony serve:start   (ne jamais le fermer, on ouvre avec + un 2eme)
+on obtient le lien de la page ici c'est http://127.0.0.1:8000/ pour y accéder
+
+
+pour lancer page http://127.0.0.1:8000/
+
+
+on a créer un fichier .env.dev.local est on copié le contenu de .env puis on a changer cela  
+DATABASE_URL="mysql://root@127.0.0.1:3306/testsymfony2?serverVersion=8&charset=utf8mb4"  (root est l'accès à phpmyadmin et testsymfony2 notre nom de projet)
+
+
+dans le terminal : symfony console make   afin de voir les tables 
+
+symfony console doctrine:database:create ou (d:d:c)   pour créer une database quon retrouve dans php my admin 
+ce quon veut faire est avec make et doctrine pour ce qui touche à la base de donnée
+
+on crée un controller symfony console make:controller   et on le nomme Home (pas oublier majuscule)
+
+
+on obtient dans controller (homecontroller, on met un methods get) et on met que /  pour taper que http://127.0.0.1:8000/  pour accéder un notre page accueil
+et on obtient dans templates home un index.html.twig ou on remplace le titre par accueil  et on supprime ce qui est superflu
+
+on crée dans template un fichier prive et dedans un _header.html.twig  (on utilise bootswatch pour créer un menu)
+on prend cdn bootstrap et bootswatch css et pour bootstrap on doit mettre le cdn js aussi et on le colle dans base.html.twig qui est dans controller
+
+
+dans base.html.twig : on ajoute des block {% block header %}
+{% include "prive/_header.html.twig" %}
+{% endblock %}  pour mettre notre header
+
+maintenant on va créer une entité :   symfony console make:entity   et on donne le nom d'une classe (attention à la majuscule)
+ici on l'appelle Ingredients ensuite on clique sur entré 
+après on doit donner des noms de propriétés : ici  one le nomme nom (champ de notre table ingrédient)  puis on clique sur entré entré et entré 
+on obtient cela dans la console
+New property name (press <return> to stop adding fields):
+    > nom 
+   
+    Field type (enter ? to see all types) [string]:
+    >
+   
+    Field length [255]:
+    >
+   
+    Can this field be null in the database (nullable) (yes/no) [no]:
+    >
+   
+    updated: src/Entity/Ingredients.php
+
+    ensuite on crée une autre propriété prix et dans field type on met ?  pour voir les tables pour prix se sera du float puis ensuite entrée entrée
+
+    ensutie on crée la date donc nouvelle propriété createdAt on obtient direct datetime donc entrée et entré 
+
+    ensuite on fait symfony console make:migration on obtient dans migration une version2024.... et dans entity on obtient un fichier Ingredients.php
+
+    ensuite symfony console doctrine:migrations:migrate
+    on obtient sur phpmyadmin sur testsymfony2 toutes nos tables dans la base de donnée
+
+    dans Ingredients.php on crée public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable;
+    }
+
+
+    ensuite on fait composer require --dev orm-fixtures on met "symfony/asset": "*",
+    "symfony/asset-mapper": "*", car on a une erreur
+     faire  un   composer require --dev orm-fixtures    (on se met en mode dev pour avoir des infos et tester)
+
+    on obtient dans datafixtures un appFixtures
+    ensuite on met composer require --dev fzaninotto/faker (c'est une bibliothèque de fausses données)
+
+    on met dedans  
+    
+    private Generator $faker; (générer notre faker)
+
+    public function __construct()
+    {
+        $this-> faker = FakerFactory::create('fr_FR');
+    } (Cette fonction (pour récupérer fausse donnée) crée une instance de la classe Faker avec la configuration pour générer des données en français ('fr_FR'). La bibliothèque Faker est souvent utilisée dans le développement pour créer des données de test ou des données factices de manière réaliste.)
+
+    public function load(ObjectManager $manager): void
+    {
+        for ($i = 0; $i < 50; $i++) {     on fait une boucle pour créer 50 fausses données à la fois
+        $ingredient = new Ingredients();
+        $ingredient->setNom($this->faker->word())  on va chercher un mot 
+                ->setPrix(mt_rand(1,200));    et un prix aléatoire 
+        $manager->persist($ingredient);     préparer à être dans la table ingrédient
+
+        $manager->flush();          on le pousse dans table ingrédient
+    }
+    }
+    Pour créer les données, on fait    symfony console doctrine:fixtures:load   et on met yes 
+
+
+    ensuite on fait entity ingrédients  templates ingredient et controller ingredient 
+
+
+    puis on fait require knplabs/knp-paginator-bundle
+
+    on crée une table dans notre index.html.twig avec bootswatch
+
+    sur le site twig on à les renseignement concernant date comme ici {{ ingredient.createdAt|date("d/m/Y")}}</td> (date("m ... est obligatoire"))
+
+    <div class="navigation d-flex justify-content-center">
+        {% if ingredients.getTotalItemCount %}
+            {{ knp_pagination_render(ingredients)}}
+        {% endif %}
+      </div> ( si on a ingrédient  on affiche sonon on affiche pas )
+
+      on crée une nouvelle fonction dans ingreident html
+      #[Route('/ingredient/new', name:'new', methods: ['GET', 'POST'])]
+      public function new(){
+          
+          return $this->render('ingredient/new.html.twig');
+      }
+
+      puis on crée un new.html.twig
+
+      puis on fait  symfony console make:form
+
+      The name of the form class (e.g. TinyElephantType):
+      > Ingredient
+     
+      The name of Entity or fully qualified model class name that the new form will be bound to (empty for none):
+      > Ingredients
+     
+      created: src/Form/IngredientType.php
+     
+      
+       Success! 
+      
+     
+      Next: Add fields to your form and start using it.
+      Find the documentation at https://symfony.com/doc/current/forms.html
+
+      <li class="nav-item">
+        <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
+      </li>
+     <li class="nav-item">
+        <a class="nav-link" href="{{ path('app_ingredient') }}">Ingrédients</a> 
+        on fait les route dans prive _header
+
+
+
+
+
+
+Créer  pour recettes :  
+symfony console make:entity
+
+ Class name of the entity to create or update (e.g. VictoriousKangaroo):
+ > Recettes
+
+ Add the ability to broadcast entity updates using Symfony UX Turbo? (yes/no) [no]:
+ > 
+
+ created: src/Entity/Recettes.php
+ created: src/Repository/RecettesRepository.php
+ 
+ Entity generated! Now let's add some fields!
+ You can always add more fields later manually or by re-running this command.
+
+ New property name (press <return> to stop adding fields): 
+ > nom
+
+ Field type (enter ? to see all types) [string]:
+ >
+
+ Field length [255]:
+ >
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > temps
+
+ Field type (enter ? to see all types) [string]:
+ > int
+
+Main Types
+  * string
+  * text
+  * boolean
+  * integer or smallint or bigint
+  * float
+
+Relationships/Associations
+  * relation or a wizard will help you build the relation  
+  * ManyToOne
+  * OneToMany
+  * ManyToMany
+  * OneToOne
+
+Array/Object Types
+  * array or simple_array
+  * json
+  * object
+  * binary
+  * blob
+
+Date/Time Types
+  * datetime or datetime_immutable
+  * datetimetz or datetimetz_immutable
+  * date or date_immutable
+  * time or time_immutable
+  * dateinterval
+
+Other Types
+  * ascii_string
+  * decimal
+  * guid
+
+
+
+
+ [ERROR] Invalid type "int".
+
+
+
+
+
+
+
+ Field type (enter ? to see all types) [string]:
+ > integer
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > nombrePersonnes
+
+ Field type (enter ? to see all types) [string]:
+ > integer
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > difficulte
+
+ Field type (enter ? to see all types) [string]:
+ > integer
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > etapes
+
+ Field type (enter ? to see all types) [string]:
+ >
+
+ Field length [255]:
+ >
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > prix
+
+ Field type (enter ? to see all types) [string]:
+ > float
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > createdAt
+
+ Field type (enter ? to see all types) [datetime_immutable]:
+ >
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > updatedAt
+
+ Field type (enter ? to see all types) [datetime_immutable]:
+ >
+
+ Can this field be null in the database (nullable) (yes/no) [no]:
+ >
+
+ updated: src/Entity/Recettes.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ > listIngredients
+
+ Field type (enter ? to see all types) [string]:
+ > relation
+
+ What class should this entity be related to?:
+ > OneToMany
+
+
+
+
+ [ERROR] Unknown class "OneToMany"
+
+
+
+
+
+
+ What class should this entity be related to?:
+ > App\Entity\Ingredients
+
+What type of relationship is this?
+ ------------ ----------------------------------------------------------------------------
+  Type         Description
+                                
+ ------------ ----------------------------------------------------------------------------
+  ManyToOne    Each Recettes relates to (has) one Ingredients.
+               Each Ingredients can relate to (can have) many Recettes objects.
+
+
+  OneToMany    Each Recettes can relate to (can have) many 
+Ingredients objects.
+               Each Ingredients relates to (has) one Recettes.
+
+
+  ManyToMany   Each Recettes can relate to (can have) many 
+Ingredients objects.
+               Each Ingredients can also relate to (can also have) many Recettes objects.
+
+
+  OneToOne     Each Recettes relates to (has) exactly one Ingredients.
+               Each Ingredients also relates to (has) exactly one Recettes.
+ ------------ ----------------------------------------------------------------------------
+
+ Relation type? [ManyToOne, OneToMany, ManyToMany, OneToOne]:
+ > OneToMany
+
+ A new property will also be added to the Ingredients class so that you can access and set the related Recettes object from it.
+
+ New field name inside Ingredients [recettes]:
+ > recette
+
+ Is the Ingredients.recette property allowed to be null (nullable)? (yes/no) [yes]:
+ >
+
+ updated: src/Entity/Recettes.php
+ updated: src/Entity/Ingredients.php
+
+ Add another property? Enter the property name (or press <return> to stop adding fields):
+ >
+
+
+
+  Success!
+
+
+ Next: When you're ready, create a migration with symfony.exe console make:migration
+
+PS C:\Users\BIENVENUE\test-symfony> symfony.exe console make:migration
+
+
+ created: migrations/Version20240115101014.php
+
+ 
+  Success! 
+ 
+
+ Review the new migration then run it with symfony.exe console doctrine:migrations:migrate
+ See https://symfony.com/doc/current/bundles/DoctrineMigrationsBundle/index.html
+PS C:\Users\BIENVENUE\test-symfony> symfony.exe console doctrine:migrations:migrate

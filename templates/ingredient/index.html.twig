@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ingredients{% endblock %}
+
+{% block body %}
+
+<div class="example-wrapper">
+    <h1>Ingredients</h1>
+
+    <div class="d-flex justify-content-center">
+        {% for message in app.flashes("success") %}
+        <div class="flash-notice">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="count d-flex justify-content-center">
+        {% if ingredients.getTotalItemCount %}
+            {{ ingredients.getTotalItemCount }} ingrédients
+        {% else %}
+            Pas d'ingrédients
+
+        {% endif %}
+    </div>
+    <table class="table table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Numéro</th>
+            <th scope="col">Nom</th>
+            <th scope="col">Prix</th>
+            <th scope="col">Date de création</th>
+            <th scope="col">Edition</th>
+            <th scope="col">Suppression</th>
+          </tr>
+        </thead>
+        <tbody> 
+          {% for ingredient in ingredients %}
+            <tr class="table-primary">
+                <th scope="row">{{ ingredient.id }}</th>
+                <td>{{ ingredient.nom }}</td>
+                <td>{{ ingredient.prix }}</td>
+                <td>{{ ingredient.createdAt|date("d/m/Y")}}</td>
+                <td>
+                    <a href="{{ path('edit', {id : ingredient.id})}}" class="btn btn-info">Editer</a>
+                </td>
+                <td>
+                    <a href="{{ path('delete', {id : ingredient.id})}}" onclick="return confirm('Etes vous sûr de vouloir supprimer l\'ingrédient?')" class="btn btn-warning">Supprimer</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="navigation d-flex justify-content-center">
+        {% if ingredients.getTotalItemCount %}
+            {{ knp_pagination_render(ingredients,
+            '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig')}}
+        {% endif %}
+      </div>
+</div>
+{% endblock %}
